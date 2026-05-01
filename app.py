@@ -13,7 +13,6 @@ load_dotenv()
 app = Flask(__name__)
 
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key")
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///portfolio.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 app.config["MAIL_SERVER"] = "smtp.gmail.com"
@@ -48,6 +47,12 @@ class Project(db.Model):
         return [t.strip() for t in self.tags.split(",") if t.strip()]
 
 
+db_url = os.getenv("DATABASE_URL", "sqlite:///portfolio.db")
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+
+
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -63,7 +68,10 @@ def admin_required(f):
 
 @app.route("/")
 def index():
-    projects = Project.query.order_by(Project.created_at.desc()).all()
+    try:
+        projects = Project.query.order_by(Project.created_at.desc()).all()
+    except Exception:
+        projects = []
     return render_template("index.html", projects=projects)
 
 
@@ -217,8 +225,11 @@ def delete_project(project_id):
     return redirect(url_for("admin_dashboard"))
 
 
-with app.app_context():
-    db.create_all()
+try:
+    with app.app_context():
+        db.create_all()
+except Exception as e:
+    print(f"DB init error: {e}")
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
