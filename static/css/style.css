@@ -1,14 +1,14 @@
 :root {
     --bg-primary: #0a0a0f;
     --bg-secondary: #12121a;
-    --bg-card: #1a1a2e;
+    --bg-card: #1a0a0e;
     --text-primary: #e6e6e6;
-    --text-secondary: #a0a0b0;
-    --text-muted: #6b6b80;
-    --accent: #00d4ff;
-    --accent-hover: #00b8e6;
-    --accent-glow: rgba(0, 212, 255, 0.3);
-    --border: #2a2a3e;
+    --text-secondary: #c5cdd6;
+    --text-muted: #8a8a90;
+    --accent: #c00f23;
+    --accent-hover: #db0321;
+    --accent-glow: rgba(192, 15, 35, 0.3);
+    --border: #2a1a1e;
     --border-light: rgba(255, 255, 255, 0.06);
     --success: #00c853;
     --error: #ff5252;
@@ -17,8 +17,8 @@
     --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-mono: 'Fira Code', 'Courier New', monospace;
-    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b2cbf 100%);
-    --gradient-hover: linear-gradient(135deg, #00b8e6 0%, #6a22a8 100%);
+    --gradient: linear-gradient(135deg, #c00f23 0%, #ff613b 100%);
+    --gradient-hover: linear-gradient(135deg, #db0321 0%, #ff4f20 100%);
 }
 
 [data-theme="light"] {
@@ -28,9 +28,9 @@
     --text-primary: #1a1a2e;
     --text-secondary: #4a4a5a;
     --text-muted: #8888a0;
-    --accent: #0066cc;
-    --accent-hover: #0055aa;
-    --accent-glow: rgba(0, 102, 204, 0.2);
+    --accent: #c00f23;
+    --accent-hover: #db0321;
+    --accent-glow: rgba(192, 15, 35, 0.2);
     --border: #e0e0e8;
     --border-light: rgba(0, 0, 0, 0.06);
     --shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
