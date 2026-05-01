@@ -201,6 +201,60 @@
 
     yearSpan.textContent = new Date().getFullYear();
 
+    function initTestimonialCarousel() {
+        const track = document.getElementById('testimonialTrack');
+        const prevBtn = document.getElementById('testimonialPrev');
+        const nextBtn = document.getElementById('testimonialNext');
+        const dotsContainer = document.getElementById('testimonialDots');
+        if (!track || !prevBtn || !nextBtn || !dotsContainer) return;
+
+        const slides = track.querySelectorAll('.testimonial-slide');
+        let currentIndex = 0;
+        let autoPlayInterval;
+
+        slides.forEach((_, i) => {
+            const dot = document.createElement('button');
+            dot.classList.add('carousel-dot');
+            if (i === 0) dot.classList.add('active');
+            dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
+            dot.addEventListener('click', () => goToSlide(i));
+            dotsContainer.appendChild(dot);
+        });
+
+        function updateDots() {
+            dotsContainer.querySelectorAll('.carousel-dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i === currentIndex);
+            });
+        }
+
+        function goToSlide(index) {
+            currentIndex = index;
+            track.style.transform = `translateX(-${currentIndex * 100}%)`;
+            updateDots();
+            resetAutoPlay();
+        }
+
+        function nextSlide() {
+            currentIndex = (currentIndex + 1) % slides.length;
+            goToSlide(currentIndex);
+        }
+
+        function prevSlide() {
+            currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+            goToSlide(currentIndex);
+        }
+
+        nextBtn.addEventListener('click', nextSlide);
+        prevBtn.addEventListener('click', prevSlide);
+
+        function resetAutoPlay() {
+            clearInterval(autoPlayInterval);
+            autoPlayInterval = setInterval(nextSlide, 5000);
+        }
+
+        resetAutoPlay();
+    }
+
     function initHeroAnimations() {
         const nameEl = document.querySelector('.hero-name-text');
         const titleEl = document.querySelector('.hero-title-text');
@@ -265,4 +319,5 @@
     initTheme();
     createParticles();
     initHeroAnimations();
-})();
+    initTestimonialCarousel();
+})()

@@ -287,7 +287,7 @@ try:
                 Project(
                     title="Ejikeugboaja Foundation",
                     description="A foundation website built to showcase the organization's mission, initiatives, and community impact with a clean, modern design.",
-                    image_url="/static/assets/ejf-logo.png",
+                    image_url="https://img.icons8.com/external-vitaliy-gorbachev-lineal-vitaly-gorbachev/120/external-foundation-charity-vitaliy-gorbachev-lineal-vitaly-gorbachev-2.png",
                     live_url="https://ejikeugboajafoundation.org",
                     source_url="https://github.com/Emma3011-gif/ejikeugboajafoundation",
                     tags="WordPress, PHP, HTML5, CSS3",
@@ -295,15 +295,15 @@ try:
                 Project(
                     title="Weather Dashboard",
                     description="Real-time weather application with location-based forecasts, interactive maps, and dynamic visualizations.",
-                    image_url=None,
-                    live_url=None,
-                    source_url=None,
+                    image_url="https://img.icons8.com/external-vitaliy-gorbachev-lineal-vitaly-gorbachev/120/external-weather-weather-forecast-vitaliy-gorbachev-lineal-vitaly-gorbachev.png",
+                    live_url="#",
+                    source_url="#",
                     tags="React, API, CSS3, Chart.js",
                 ),
                 Project(
                     title="To-Do List App",
                     description="A clean and intuitive task management app with add, edit, delete, and mark-complete functionality built for everyday productivity.",
-                    image_url=None,
+                    image_url="https://img.icons8.com/external-vitaliy-gorbachev-lineal-vitaly-gorbachev/120/external-to-do-list-checklist-vitaliy-gorbachev-lineal-vitaly-gorbachev.png",
                     live_url="https://to-do-list-ddjg.vercel.app",
                     source_url="https://github.com/Emma3011-gif",
                     tags="React, JavaScript, CSS3, Vercel",
