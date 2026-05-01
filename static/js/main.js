@@ -184,6 +184,7 @@
                 formStatus.className = 'form-status success';
                 formStatus.textContent = data.message;
                 contactForm.reset();
+                setTimeout(() => { formStatus.textContent = ''; }, 5000);
             } else {
                 formStatus.className = 'form-status error';
                 formStatus.textContent = data.error || 'Something went wrong';

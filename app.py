@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, send_from_directory
 from flask_mail import Mail, Message
 from dotenv import load_dotenv
 
@@ -45,6 +45,15 @@ def contact():
     except Exception as e:
         print(f"Email error: {e}")
         return jsonify({"error": "Failed to send message. Please try again."}), 500
+
+
+@app.route("/download-resume")
+def download_resume():
+    return send_from_directory(
+        os.path.join(app.static_folder, "assets"),
+        "Junior Software Developer Resume.pdf",
+        as_attachment=True
+    )
 
 
 if __name__ == "__main__":
