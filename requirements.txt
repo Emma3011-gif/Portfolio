@@ -1,5 +1,5 @@
 Flask==3.0.0
-Flask-Mail==0.10.0
+resend==2.2.0
 Flask-SQLAlchemy==3.1.1
 psycopg2-binary==2.9.9
 python-dotenv==1.0.0

@@ -1,7 +1,7 @@
 import os
+import resend
 from functools import wraps
 from flask import Flask, render_template, jsonify, request, send_from_directory, redirect, url_for, flash, session
-from flask_mail import Mail, Message
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 from datetime import datetime
@@ -18,14 +18,7 @@ if db_url and db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 app.config["SQLALCHEMY_DATABASE_URI"] = db_url
 
-app.config["MAIL_SERVER"] = "smtp.gmail.com"
-app.config["MAIL_PORT"] = 587
-app.config["MAIL_USE_TLS"] = True
-app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME", "emicyber20@gmail.com")
-app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD", "")
-app.config["MAIL_DEFAULT_SENDER"] = os.getenv("MAIL_USERNAME", "emicyber20@gmail.com")
-
-mail = Mail(app)
+resend.api_key = os.getenv("RESEND_API_KEY", "")
 db = SQLAlchemy(app)
 
 
@@ -66,23 +59,41 @@ def index():
 
 @app.route("/api/contact", methods=["POST"])
 def contact():
-    data = request.get_json()
-    name = data.get("name", "").strip()
-    email = data.get("email", "").strip()
-    message = data.get("message", "").strip()
-
-    if not name or not email or not message:
-        return jsonify({"error": "All fields are required"}), 400
-
     try:
-        msg = Message(
-            subject=f"Portfolio Contact: {name}",
-            sender=("Portfolio Contact", os.getenv("MAIL_USERNAME", "emicyber20@gmail.com")),
-            recipients=["emicyber20@gmail.com"],
-            body=f"Name: {name}\nEmail: {email}\n\nMessage:\n{message}",
-            reply_to=email,
-        )
-        mail.send(msg)
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({"error": "Invalid request data"}), 400
+
+        name = data.get("name", "").strip()
+        email = data.get("email", "").strip()
+        message = data.get("message", "").strip()
+
+        if not name or not email or not message:
+            return jsonify({"error": "All fields are required"}), 400
+
+        api_key = os.getenv("RESEND_API_KEY", "")
+        if not api_key:
+            print("No RESEND_API_KEY set")
+            return jsonify({"error": "Email service not configured"}), 500
+
+        resend.api_key = api_key
+
+        params = {
+            "from": os.getenv("RESEND_FROM_EMAIL", "Portfolio <onboarding@resend.dev>"),
+            "to": ["emicyber20@gmail.com"],
+            "subject": f"Portfolio Contact: {name}",
+            "reply_to": email,
+            "html": f"""
+                <h2>New Portfolio Contact</h2>
+                <p><strong>Name:</strong> {name}</p>
+                <p><strong>Email:</strong> {email}</p>
+                <h3>Message:</h3>
+                <p>{message.replace(chr(10), '<br>')}</p>
+            """
+        }
+
+        email_response = resend.Emails.send(params)
+        print(f"Email sent: {email_response}")
         return jsonify({"message": "Message sent successfully!"}), 200
     except Exception as e:
         print(f"Email error: {e}")
