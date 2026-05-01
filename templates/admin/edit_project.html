@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Project | Admin</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        .topbar {
+            background: #141414;
+            border-bottom: 1px solid #2a2a2a;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .topbar h1 { font-size: 20px; color: #00ff88; }
+        .btn { padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; transition: all 0.2s; border: none; }
+        .btn-outline { background: transparent; border: 1px solid #444; color: #e0e0e0; }
+        .btn-primary { background: #00ff88; color: #000; }
+        .btn-primary:hover { background: #00cc6a; }
+        .container { max-width: 700px; margin: 0 auto; padding: 32px 24px; }
+        .form-card {
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 32px;
+        }
+        .form-group { margin-bottom: 24px; }
+        .form-group label { display: block; font-size: 13px; color: #aaa; margin-bottom: 8px; font-weight: 500; }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #00ff88; }
+        .form-group textarea { min-height: 120px; resize: vertical; }
+        .form-group .hint { font-size: 12px; color: #666; margin-top: 6px; }
+        .current-image { margin-bottom: 16px; }
+        .current-image img { max-width: 250px; border-radius: 8px; border: 1px solid #333; }
+        .current-image p { font-size: 12px; color: #666; margin-bottom: 8px; }
+        .image-preview { margin-top: 12px; max-width: 300px; border-radius: 8px; display: none; }
+        .flash { padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 20px; }
+        .flash.error { background: rgba(255,70,70,0.15); border: 1px solid rgba(255,70,70,0.3); color: #ff6b6b; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>Edit Project</h1>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">Back to Dashboard</a>
+    </div>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" enctype="multipart/form-data" class="form-card">
+            <div class="form-group">
+                <label for="title">Project Title *</label>
+                <input type="text" id="title" name="title" required value="{{ project.title }}">
+            </div>
+            <div class="form-group">
+                <label for="description">Description *</label>
+                <textarea id="description" name="description" required>{{ project.description }}</textarea>
+            </div>
+            <div class="form-group">
+                <label>Current Image</label>
+                {% if project.image_url %}
+                <div class="current-image">
+                    <img src="{{ url_for('static', filename=project.image_url) }}" alt="{{ project.title }}">
+                </div>
+                {% else %}
+                <p class="hint">No image uploaded yet</p>
+                {% endif %}
+                <label for="image" style="margin-top: 8px;">Replace Image</label>
+                <input type="file" id="image" name="image" accept="image/*" onchange="previewImage(event)">
+                <p class="hint">PNG, JPG, GIF, or WEBP. Max recommended: 2MB</p>
+                <img id="preview" class="image-preview" alt="Preview">
+            </div>
+            <div class="form-group">
+                <label for="live_url">Live Demo URL</label>
+                <input type="url" id="live_url" name="live_url" value="{{ project.live_url or '' }}" placeholder="https://...">
+            </div>
+            <div class="form-group">
+                <label for="source_url">Source Code URL</label>
+                <input type="url" id="source_url" name="source_url" value="{{ project.source_url or '' }}" placeholder="https://github.com/...">
+            </div>
+            <div class="form-group">
+                <label for="tags">Tags</label>
+                <input type="text" id="tags" name="tags" value="{{ project.tags or '' }}" placeholder="React, JavaScript, CSS3">
+                <p class="hint">Separate tags with commas</p>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; padding: 14px;">Update Project</button>
+        </form>
+    </div>
+
+    <script>
+        function previewImage(event) {
+            const file = event.target.files[0];
+            const preview = document.getElementById('preview');
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => { preview.src = e.target.result; preview.style.display = 'block'; };
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

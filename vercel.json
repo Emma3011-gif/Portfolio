@@ -16,6 +16,18 @@
       "dest": "/static/$1"
     },
     {
+      "src": "/admin/(.*)",
+      "dest": "app.py"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "app.py"
+    },
+    {
+      "src": "/download-resume",
+      "dest": "app.py"
+    },
+    {
       "src": "/(.*)",
       "dest": "app.py"
     }
