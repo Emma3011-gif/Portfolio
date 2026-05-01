@@ -3,8 +3,6 @@ from functools import wraps
 from flask import Flask, render_template, jsonify, request, send_from_directory, redirect, url_for, flash, session
 from flask_mail import Mail, Message
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from datetime import datetime
 
@@ -15,16 +13,17 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+db_url = os.getenv("DATABASE_URL", "sqlite:///portfolio.db")
+if db_url and db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+
 app.config["MAIL_SERVER"] = "smtp.gmail.com"
 app.config["MAIL_PORT"] = 587
 app.config["MAIL_USE_TLS"] = True
 app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME", "emicyber20@gmail.com")
 app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD", "")
 app.config["MAIL_DEFAULT_SENDER"] = os.getenv("MAIL_USERNAME", "emicyber20@gmail.com")
-
-ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
-UPLOAD_FOLDER = os.path.join(app.static_folder, "uploads", "projects")
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 mail = Mail(app)
 db = SQLAlchemy(app)
@@ -34,9 +33,9 @@ class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    image_url = db.Column(db.String(300), nullable=True)
-    live_url = db.Column(db.String(300), nullable=True)
-    source_url = db.Column(db.String(300), nullable=True)
+    image_url = db.Column(db.String(500), nullable=True)
+    live_url = db.Column(db.String(500), nullable=True)
+    source_url = db.Column(db.String(500), nullable=True)
     tags = db.Column(db.String(300), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -45,16 +44,6 @@ class Project(db.Model):
         if not self.tags:
             return []
         return [t.strip() for t in self.tags.split(",") if t.strip()]
-
-
-db_url = os.getenv("DATABASE_URL", "sqlite:///portfolio.db")
-if db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql://", 1)
-app.config["SQLALCHEMY_DATABASE_URI"] = db_url
-
-
-def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def admin_required(f):
@@ -136,7 +125,10 @@ def admin_logout():
 @app.route("/admin/dashboard")
 @admin_required
 def admin_dashboard():
-    projects = Project.query.order_by(Project.created_at.desc()).all()
+    try:
+        projects = Project.query.order_by(Project.created_at.desc()).all()
+    except Exception:
+        projects = []
     return render_template("admin/dashboard.html", projects=projects)
 
 
@@ -146,6 +138,7 @@ def add_project():
     if request.method == "POST":
         title = request.form.get("title", "").strip()
         description = request.form.get("description", "").strip()
+        image_url = request.form.get("image_url", "").strip()
         live_url = request.form.get("live_url", "").strip()
         source_url = request.form.get("source_url", "").strip()
         tags = request.form.get("tags", "").strip()
@@ -154,25 +147,22 @@ def add_project():
             flash("Title and description are required", "error")
             return render_template("admin/add_project.html")
 
-        image_url = None
-        if "image" in request.files:
-            file = request.files["image"]
-            if file and file.filename != "" and allowed_file(file.filename):
-                filename = secure_filename(f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{file.filename}")
-                file.save(os.path.join(UPLOAD_FOLDER, filename))
-                image_url = f"uploads/projects/{filename}"
-
         project = Project(
             title=title,
             description=description,
-            image_url=image_url,
+            image_url=image_url or None,
             live_url=live_url or None,
             source_url=source_url or None,
             tags=tags or None,
         )
-        db.session.add(project)
-        db.session.commit()
-        flash("Project added successfully!", "success")
+        try:
+            db.session.add(project)
+            db.session.commit()
+            flash("Project added successfully!", "success")
+        except Exception as e:
+            db.session.rollback()
+            print(f"Add project error: {e}")
+            flash("Failed to add project. Please try again.", "error")
         return redirect(url_for("admin_dashboard"))
 
     return render_template("admin/add_project.html")
@@ -185,27 +175,23 @@ def edit_project(project_id):
     if request.method == "POST":
         project.title = request.form.get("title", "").strip()
         project.description = request.form.get("description", "").strip()
+        project.image_url = request.form.get("image_url", "").strip() or None
         project.live_url = request.form.get("live_url", "").strip() or None
         project.source_url = request.form.get("source_url", "").strip() or None
         project.tags = request.form.get("tags", "").strip() or None
-
-        if "image" in request.files:
-            file = request.files["image"]
-            if file and file.filename != "" and allowed_file(file.filename):
-                old_path = os.path.join(app.static_folder, project.image_url) if project.image_url else None
-                if old_path and os.path.exists(old_path):
-                    os.remove(old_path)
-                filename = secure_filename(f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{file.filename}")
-                file.save(os.path.join(UPLOAD_FOLDER, filename))
-                project.image_url = f"uploads/projects/{filename}"
 
         if not project.title or not project.description:
             flash("Title and description are required", "error")
             return render_template("admin/edit_project.html", project=project)
 
         project.updated_at = datetime.utcnow()
-        db.session.commit()
-        flash("Project updated successfully!", "success")
+        try:
+            db.session.commit()
+            flash("Project updated successfully!", "success")
+        except Exception as e:
+            db.session.rollback()
+            print(f"Edit project error: {e}")
+            flash("Failed to update project. Please try again.", "error")
         return redirect(url_for("admin_dashboard"))
 
     return render_template("admin/edit_project.html", project=project)
@@ -215,13 +201,14 @@ def edit_project(project_id):
 @admin_required
 def delete_project(project_id):
     project = Project.query.get_or_404(project_id)
-    if project.image_url:
-        old_path = os.path.join(app.static_folder, project.image_url)
-        if os.path.exists(old_path):
-            os.remove(old_path)
-    db.session.delete(project)
-    db.session.commit()
-    flash("Project deleted successfully!", "success")
+    try:
+        db.session.delete(project)
+        db.session.commit()
+        flash("Project deleted successfully!", "success")
+    except Exception as e:
+        db.session.rollback()
+        print(f"Delete project error: {e}")
+        flash("Failed to delete project.", "error")
     return redirect(url_for("admin_dashboard"))
 
 

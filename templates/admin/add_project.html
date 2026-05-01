@@ -68,7 +68,7 @@
             {% endif %}
         {% endwith %}
 
-        <form method="POST" enctype="multipart/form-data" class="form-card">
+        <form method="POST" class="form-card">
             <div class="form-group">
                 <label for="title">Project Title *</label>
                 <input type="text" id="title" name="title" required placeholder="e.g. Weather Dashboard">
@@ -78,9 +78,9 @@
                 <textarea id="description" name="description" required placeholder="Describe what the project does..."></textarea>
             </div>
             <div class="form-group">
-                <label for="image">Project Image</label>
-                <input type="file" id="image" name="image" accept="image/*" onchange="previewImage(event)">
-                <p class="hint">PNG, JPG, GIF, or WEBP. Max recommended: 2MB</p>
+                <label for="image_url">Project Image URL</label>
+                <input type="url" id="image_url" name="image_url" placeholder="https://example.com/image.png" oninput="previewUrl(this.value)">
+                <p class="hint">Paste a direct link to an image hosted on Imgur, GitHub, Cloudinary, etc.</p>
                 <img id="preview" class="image-preview" alt="Preview">
             </div>
             <div class="form-group">
@@ -101,13 +101,12 @@
     </div>
 
     <script>
-        function previewImage(event) {
-            const file = event.target.files[0];
+        function previewUrl(url) {
             const preview = document.getElementById('preview');
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = e => { preview.src = e.target.result; preview.style.display = 'block'; };
-                reader.readAsDataURL(file);
+            if (url && (url.startsWith('http') || url.startsWith('data:'))) {
+                preview.src = url;
+                preview.style.display = 'block';
+                preview.onerror = function() { preview.style.display = 'none'; };
             } else {
                 preview.style.display = 'none';
             }

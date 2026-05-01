@@ -246,7 +246,11 @@
                     <div class="project-card">
                         <div class="project-image {% if not project.image_url %}project-image-logo{% endif %}">
                             {% if project.image_url %}
-                                <img src="{{ url_for('static', filename=project.image_url) }}" alt="{{ project.title }}">
+                                {% if project.image_url.startswith('http') or project.image_url.startswith('/') %}
+                                    <img src="{{ project.image_url }}" alt="{{ project.title }}">
+                                {% else %}
+                                    <img src="{{ url_for('static', filename=project.image_url) }}" alt="{{ project.title }}">
+                                {% endif %}
                             {% else %}
                                 <div class="project-placeholder">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
